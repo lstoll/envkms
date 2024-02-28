@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package lstoll.envkms;
+option go_package = "github.com/lstoll/envkms/proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+message Keyset {
+    // tink_keyset contains the serialized tink keyset this message wraps.
+    google.protobuf.Any tink_keyset = 1;
+    map<uint32, google.protobuf.Timestamp> key_creation_dates = 2;
+}
