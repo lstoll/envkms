@@ -20,9 +20,7 @@ func init() {
 	if !ok {
 		return
 	}
-	var err error
-	EnvContents, err = allocProtectedMem(len(ks))
-	if err != nil {
+	if err := initEnvContents(len(ks)); err != nil {
 		panic(fmt.Sprintf("allocating memory for env var: %v", err))
 	}
 	if _, err := io.ReadFull(strings.NewReader(ks), EnvContents); err != nil {

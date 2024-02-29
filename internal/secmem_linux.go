@@ -2,25 +2,23 @@ package internal
 
 import (
 	"fmt"
-	"runtime"
 
 	"golang.org/x/sys/unix"
 )
 
-func allocProtectedMem(size int) ([]byte, error) {
+func initEnvContents(size int) error {
 	// TODO(lstoll) memfd_secret implementation for kernel > 5.14
-	data, err := unix.Mmap(-1, 0, int(size), unix.PROT_READ|unix.PROT_WRITE, unix.MAP_PRIVATE|unix.MAP_ANONYMOUS)
+	var err error
+	EnvContents, err = unix.Mmap(-1, 0, int(size), unix.PROT_READ|unix.PROT_WRITE, unix.MAP_PRIVATE|unix.MAP_ANONYMOUS)
 	if err != nil {
-		return nil, fmt.Errorf("mmap: %w", err)
+		return fmt.Errorf("mmap: %w", err)
 	}
 
-	_ = unix.Madvise(data, unix.MADV_DONTDUMP)
+	_ = unix.Madvise(EnvContents, unix.MADV_DONTDUMP)
 
-	runtime.SetFinalizer(&data, func(b *[]byte) {
-		for i := range *b {
-			(*b)[i] = byte(0)
-		}
-	})
+	if err := unix.Mlock(EnvContents); err != nil {
+		return fmt.Errorf("locking mem: $v")
+	}
 
-	return data, nil
+	return nil
 }
